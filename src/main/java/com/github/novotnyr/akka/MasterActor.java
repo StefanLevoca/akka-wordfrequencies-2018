@@ -2,9 +2,12 @@ package com.github.novotnyr.akka;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
 import akka.actor.Props;
+import akka.actor.Terminated;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.routing.Broadcast;
 import akka.routing.RoundRobinPool;
 
 import java.util.HashMap;
@@ -18,6 +21,12 @@ public class MasterActor extends AbstractActor {
 
 	private Map<String, Integer> allFrequencies = new HashMap<>();
 
+	@Override
+	public void preStart() throws Exception {
+		super.preStart();
+		getContext().watch(sentenceCounter);
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Receive createReceive() {
@@ -25,7 +34,11 @@ public class MasterActor extends AbstractActor {
 				.match(String.class, sentence -> sentenceCounter.tell(sentence, getSelf()))
 				.match(Map.class, frequencies -> {
 					allFrequencies = MapUtils.aggregate(frequencies, allFrequencies);
+				})
+				.match(EofMessage.class, eof -> sentenceCounter.tell(new Broadcast(PoisonPill.getInstance()), getSelf()))
+				.match(Terminated.class, message -> {
 					logger.info(allFrequencies.toString());
+					getContext().system().terminate();
 				})
 				.build();
 	}
