@@ -18,6 +18,12 @@ public class MasterActor extends AbstractActor {
 
 	private Map<String, Integer> allFrequencies = new HashMap<>();
 
+	private int remainingSentences;
+
+	public MasterActor(int remainingSentences) {
+		this.remainingSentences = remainingSentences;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Receive createReceive() {
@@ -25,12 +31,16 @@ public class MasterActor extends AbstractActor {
 				.match(String.class, sentence -> sentenceCounter.tell(sentence, getSelf()))
 				.match(Map.class, frequencies -> {
 					allFrequencies = MapUtils.aggregate(frequencies, allFrequencies);
-					logger.info(allFrequencies.toString());
+					remainingSentences--;
+					if (remainingSentences == 0) {
+						logger.info(allFrequencies.toString());
+						getContext().system().terminate();
+					}
 				})
 				.build();
 	}
 
-	public static Props props() {
-		return Props.create(MasterActor.class);
+	public static Props props(int numberOfSentences) {
+		return Props.create(MasterActor.class, numberOfSentences);
 	}
 }

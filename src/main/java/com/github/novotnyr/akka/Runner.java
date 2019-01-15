@@ -5,8 +5,10 @@ import akka.actor.ActorSystem;
 
 public class Runner {
     public static void main(String[] args) throws Exception {
+		int numberOfSentences = 5;
+
 		ActorSystem system = ActorSystem.create();
-		ActorRef master = system.actorOf(MasterActor.props());
+		ActorRef master = system.actorOf(MasterActor.props(numberOfSentences));
 		
 		master.tell("The quick brown fox tried to jump over the lazy dog and fell on the dog", ActorRef.noSender());
 		master.tell("Dog is man's best friend", ActorRef.noSender());
