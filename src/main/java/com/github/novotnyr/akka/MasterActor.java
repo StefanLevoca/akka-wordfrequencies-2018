@@ -5,13 +5,15 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.routing.RoundRobinPool;
 
 import java.util.Map;
 
 public class MasterActor extends AbstractActor {
     private LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-	private ActorRef sentenceCounter = getContext().actorOf(SentenceCountActor.props());
+	private ActorRef sentenceCounter = getContext().actorOf(SentenceCountActor.props()
+			.withRouter(new RoundRobinPool(3)));
 
 	@Override
 	public Receive createReceive() {
