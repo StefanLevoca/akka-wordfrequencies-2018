@@ -11,6 +11,10 @@ public class SentenceCountActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
+                .match(String.class, sentence -> {
+                    Map<String, Integer> frequencies = calculateFrequencies(sentence);
+                    getSender().tell(frequencies, getSelf());
+                })
                 .build();
     }
 
